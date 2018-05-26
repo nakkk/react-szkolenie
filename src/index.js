@@ -1,23 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-class Login extends React.Component {
+const api = require("./utils/api.js").default
+
+class TextInput extends React.Component {
     static defaultProps = {
         label: "Zaloguj",
         inputPlaceholder: "Podaj login..."
     };
 
     state = {
-        user: null
+        text: null
     };
 
     render () {
         const props = this.props;
-        console.log(props);
         return (
             <form onSubmit = {(e) => {
-                if(this.state.user) {
-                    alert(this.state.user)
+                console.log(this.state.text + "przed if")
+                if(this.state.text) {
+                    this.props.onSubmit(this.state.text);
+                    this.setState({
+                        text: null
+                    })
                 }
                 e.preventDefault();
             }}>
@@ -25,7 +30,7 @@ class Login extends React.Component {
                     placeholder={props.inputPlaceholder}
                     onChange = { e => {
                         this.setState({
-                            user: e.target.value
+                            text: e.target.value
                         })
                     }}
                 />
@@ -35,7 +40,63 @@ class Login extends React.Component {
     };
 };
 
+const Messages = [];
+
+class ChatList extends React.Component {
+    render() {
+        const props = this.props;
+
+        return (
+            <div>
+            {props.Messages.map(m => {
+                return <div key={m.id}><i>{m.date} </i><b>{m.author}</b>: {m.message}</div>
+            })}
+            </div>
+        )
+    }
+}
+
+class Chat extends React.Component {
+    state = {
+        Messages,
+        UserName: undefined
+    }
+    componentDidMount() {
+        api.open()                     
+        api.listen((msg) => {
+            console.log(msg)
+            this.setState({
+                Messages: [
+                    ...this.state.Messages,
+                    {
+                        id: this.state.Messages.length + 1,
+                        author: msg.author,
+                        message: msg.message,
+                        date: msg.date
+                    }
+                ]
+            })
+        })  
+    }
+    
+    render () {
+        if (!this.state.UserName) {
+            return <TextInput label = "Zaloguj" inputPlaceholder = "wpisz login..." onSubmit={name => this.setState({
+                UserName: name
+            })} />
+        }
+        return (
+            <div>    
+                <ChatList Messages = {this.state.Messages}/>
+                <TextInput label = "Napisz" inputPlaceholder = "wpisz tekst..." onSubmit = { text => {
+                     api.send(this.state.UserName, text)         
+                }}/>
+            </div>
+        );
+    }
+}
+
 ReactDOM.render(
-    <Login />,
+    <Chat />,
     document.getElementById('root')
 );
