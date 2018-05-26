@@ -10,24 +10,24 @@ class TextInput extends React.Component {
     };
 
     state = {
-        text: null
+        text: ''
     };
 
     render () {
         const props = this.props;
         return (
             <form onSubmit = {(e) => {
-                console.log(this.state.text + "przed if")
                 if(this.state.text) {
                     this.props.onSubmit(this.state.text);
                     this.setState({
-                        text: null
+                        text: ''
                     })
                 }
                 e.preventDefault();
             }}>
                 <input type="text"
                     placeholder={props.inputPlaceholder}
+                    value = {this.state.text}
                     onChange = { e => {
                         this.setState({
                             text: e.target.value
